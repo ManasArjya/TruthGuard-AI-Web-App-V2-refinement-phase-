@@ -61,7 +61,10 @@ export default function DashboardPage() {
       const statsData = (await statsRes.json()) as DashboardStats;
 
       // --- fetch all claims (no limit)
-      const claimsRes = await fetch(`${base}/claims/browse?sort=desc`);
+      const claimsRes = await fetch(`${base}/api/v1/dashboard/my-claims`, {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      
       const claimsData = (await claimsRes.json()) as Claim[];
 
       setStats(statsData);

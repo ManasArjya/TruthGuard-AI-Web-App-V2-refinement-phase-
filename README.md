@@ -115,14 +115,21 @@ npm run dev
 
 The frontend will be available at: http://localhost:3000
 
+
+### Step 2: Activate venv
+root folder >
+venv\Scripts\activate
+
 ### 2. Backend (FastAPI)
 
 Open a new terminal:
 
 ```bash
+
 cd backend
 pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8000
+
 ```
 
 The backend API will be available at: http://localhost:8000

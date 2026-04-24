@@ -37,7 +37,7 @@ truthguard-ai/
 
 # README.md
 
-## TruthGuard AI - AI-Powered Fact-Checking Platform
+### TruthGuard AI - AI-Powered Fact-Checking Platform
 
 TruthGuard AI is a comprehensive fact-checking platform that helps users verify information using AI models, official sources, and community feedback. The platform can analyze text claims, URLs, and media files to provide detailed fact-checking reports.
 
@@ -50,16 +50,16 @@ TruthGuard AI is a comprehensive fact-checking platform that helps users verify 
 - **User Dashboard**: Personal tracking of submitted claims and requests
 - **Real-time Processing**: Asynchronous background processing with live status updates
 
-## Prerequisites
+### Prerequisites
 
 Before setting up the project, ensure you have the following installed:
 
 - **Node.js** (v18 or higher)
-- **Python** (v3.9 or higher)
+- **Python** (v3.10.11)
 - **pip** (Python package manager)
 - **Git**
 
-## Environment Setup
+### Environment Setup
 
 1. **Clone the repository**:
 ```bash
@@ -67,13 +67,17 @@ git clone
 cd truthguard-ai
 ```
 
-2. **Create environment file**:
+2. **Create environment file** (.env & .env local):
 ```bash
-cp .env.example .env
+cp .env
+.env.local
+
 ```
 
 3. **Configure environment variables** in `.env`:
-```env
+``` 
+.env
+
 # Supabase Configuration
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
@@ -88,10 +92,11 @@ OPENROUTER_API_KEY=your_openrouter_api_key
 
 # Security
 JWT_SECRET=your_jwt_secret_key_here
+
 ```
 
-## Database Setup (Supabase)
-
+### Database Setup (Supabase)
+```
 1. **Create a Supabase project** at [supabase.com](https://supabase.com)
 
 2. **Run the database schema**:
@@ -103,24 +108,31 @@ JWT_SECRET=your_jwt_secret_key_here
    - Enable RLS on all tables through the Supabase dashboard
    - The schema includes the necessary RLS policies
 
-## Installation & Running
+```
 
-### 1. Frontend (Next.js)
+### Installation & Running
+
+## 1. Frontend (Next.js)
+In root folder of integrated terminal>
 
 ```bash
+
 cd frontend
 npm install
 npm run dev
+
 ```
 
 The frontend will be available at: http://localhost:3000
 
 
-### Step 2: Activate venv
-root folder >
+## Activate venv (virtual environment for backend and AI or all) as frontend, backend and ai can't run in same environment.
+```
+root folder(truthguard-ai) > 
 venv\Scripts\activate
 
-### 2. Backend (FastAPI)
+```
+## 2. Backend (FastAPI)
 
 Open a new terminal:
 
@@ -134,14 +146,16 @@ uvicorn app.main:app --reload --port 8000
 
 The backend API will be available at: http://localhost:8000
 
-### 3. AI Service (FastAPI)
+## 3. AI Service (FastAPI)
 
 Open another new terminal:
 
 ```bash
+
 cd ai-service
 pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8001
+
 ```
 
 The AI service will be available at: http://localhost:8001
@@ -156,10 +170,9 @@ The AI service will be available at: http://localhost:8001
 6. **Generate RTI requests** for government-related claims
 7. **Track your submissions** in the user dashboard
 
-## API Documentation
+## Documentation (API & Porject Report)
 
-- **Backend API Docs**: http://localhost:8000/docs
-- **AI Service API Docs**: http://localhost:8001/docs
+# will be uploaded soon.
 
 ## Development Notes
 
@@ -170,18 +183,19 @@ The AI service will be available at: http://localhost:8001
 
 ## Troubleshooting
 
-### Common Issues
+# Common Issues
 
 1. **Port conflicts**: Ensure ports 3000, 8000, and 8001 are available
 2. **Environment variables**: Double-check all required variables are set in `.env`
 3. **Database connection**: Verify Supabase credentials and database schema is applied
 4. **Dependencies**: Make sure all requirements are installed for each service
 
-### Getting Help
+# Getting Help
 
-- Check the API documentation for endpoint details
-- Review the browser console and server logs for error messages
-- Ensure all services are running before testing functionality
+- Contact me via github, linkedin or email.
+- Check the API documentation for endpoint details.
+- Review the browser console and server logs (terminals) for error messages.
+- Ensure all services are running before testing functionality.
 
 ## Architecture
 
@@ -199,4 +213,4 @@ This separation ensures scalability and maintainability while keeping the main b
 ## License
 
 This project is licensed under the MIT License.
-# truthguard
+

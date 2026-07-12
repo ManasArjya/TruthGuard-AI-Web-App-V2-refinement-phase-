@@ -1,0 +1,32 @@
+name: Keep Supabase Alive
+
+on:
+  schedule:
+    # Runs every 12 hours
+    - cron: "0 */12 * * *"
+
+  workflow_dispatch:
+
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Ping Supabase REST API
+        run: |
+          echo "🚀 Pinging TruthGuard Supabase..."
+
+          response=$(curl -s -o response.txt -w "%{http_code}" \
+            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
+            "https://uvzvzzepawrvhtdkensw.supabase.co/rest/v1/claims?select=id&limit=1")
+
+          echo "HTTP Status: $response"
+          cat response.txt
+
+          if [ "$response" -eq 200 ]; then
+            echo "✅ Supabase is awake."
+          else
+            echo "❌ Ping failed!"
+            exit 1
+          fi

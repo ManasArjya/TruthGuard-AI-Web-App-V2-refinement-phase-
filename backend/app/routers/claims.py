@@ -128,12 +128,23 @@ async def submit_claim(
 
 @router.get("/{claim_id}", response_model=ClaimDetail)
 async def get_claim(
+    request: Request,
     claim_id: uuid.UUID,
     current_user: Optional[User] = Depends(get_current_user_optional) # <-- UPDATED
 ):
     """Get claim details with analysis, comment count, and vote status"""
     try:
         logger.info(f"📥 Fetching claim {claim_id}")
+        auth_header = request.headers.get("Authorization")
+        user_jwt = None
+
+        if auth_header and auth_header.startswith("Bearer "):
+            user_jwt = auth_header.split(" ")[1]
+
+        if user_jwt:
+            supabase.postgrest.auth(user_jwt)
+
+
         result = supabase.table("claims").select(
             "*, claim_analyses(*), claim_comments(count)"
         ).eq("id", str(claim_id)).single().execute()
@@ -237,18 +248,29 @@ async def get_claim(
 
         # --- START: NEW VOTE LOGIC ---
         user_vote_status: Optional[VoteType] = None
+
         if current_user:
             try:
-                vote_result = supabase.table("claim_votes").select("vote_type").eq(
-                    "claim_id", str(claim_id)
-                ).eq("user_id", str(current_user.id)).single().execute()
-                
-                if vote_result.data:
-                    user_vote_status = vote_result.data.get("vote_type")
-                    logger.info(f"🗳️ User {current_user.id} has voted: {user_vote_status}")
+                logger.info(f"Current user id: {current_user.id}")
+                vote_result = (
+                    supabase.table("claim_votes")
+                    .select("vote_type")
+                    .eq("claim_id", str(claim_id))
+                    .eq("user_id", str(current_user.id))
+                    .execute()
+                )
+
+                logger.info(f"Vote data: {vote_result.data}")
+
+                if vote_result.data and len(vote_result.data) > 0:
+                    user_vote_status = vote_result.data[0]["vote_type"]
+                    logger.info(
+                    f"🗳️ User {current_user.id} has voted: {user_vote_status}"
+                    )
+
             except Exception as vote_e:
-                # Log the error but don't fail the request (e.g., if no vote found)
                 logger.warning(f"Could not fetch user vote status: {vote_e}")
+            
         # --- END: NEW VOTE LOGIC ---
 
         logger.info(f"🎯 Returning claim detail - has_analysis: {analysis is not None}, comment_count: {comment_count}, user_vote: {user_vote_status}")
@@ -393,6 +415,7 @@ async def get_claim_status(claim_id: uuid.UUID):
 
 @router.post("/{claim_id}/vote", status_code=status.HTTP_200_OK)
 async def vote_on_claim(
+    request: Request,
     claim_id: uuid.UUID,
     vote: CommentVote,  # We can reuse the CommentVote schema
     current_user: User = Depends(get_current_user)
@@ -404,6 +427,19 @@ async def vote_on_claim(
     # We only allow 'up' votes on claims
     if vote.vote_type.value != 'up':
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Only upvotes are allowed on claims.")
+    
+    # Get the user's JWT from the Authorization header
+    auth_header = request.headers.get("Authorization")
+    user_jwt = None
+
+    if auth_header and auth_header.startswith("Bearer "):
+        user_jwt = auth_header.split(" ")[1]
+
+    if not user_jwt:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing authentication token."
+        )
 
     vote_data = {
         "claim_id": str(claim_id),
@@ -412,7 +448,21 @@ async def vote_on_claim(
     }
     
     # Upsert the vote
-    supabase.table("claim_votes").upsert(vote_data).execute()
+    #supabase.table("claim_votes").upsert(vote_data).execute()
+    try:
+    # Authenticate this request with the user's JWT
+        supabase.postgrest.auth(user_jwt)
+
+    # Insert or update the vote
+        supabase.table("claim_votes").upsert(
+            vote_data,
+            on_conflict="claim_id,user_id"
+            ).execute()
+
+    finally:
+    # Reset the shared client back to anon
+        supabase.postgrest.auth(anon_key)
+    
     
     # Trigger the recalculation
     try:
@@ -420,5 +470,7 @@ async def vote_on_claim(
     except Exception as e:
         logger.error(f"Error recalculating claim votes for {claim_id}: {e}")
         # Don't fail the whole request, the vote was still cast
-    
+    finally:
+        supabase.postgrest.auth(anon_key)
+
     return {"status": "success", "message": "Vote submitted and counts updated."}
